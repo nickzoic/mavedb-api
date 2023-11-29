@@ -10,40 +10,33 @@ from mavedb.deps import get_db
 from mavedb.lib.authentication import get_current_user
 from mavedb.models.user import User
 from tests.helpers.constants import TEST_USER
+from mavedb.db.session import engine, SessionLocal
+
+
+local_session = SessionLocal()
 
 
 @pytest.fixture()
 def session():
-    Base.metadata.drop_all(bind=engine)
+    # Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    return local_session
 
-    db = TestingSessionLocal()
 
-    try:
-        yield db
-    finally:
-        db.close()
+def pytest_runtest_setup(item):
+    local_session.begin()
+
+
+def pytest_runtest_teardown(item):
+    local_session.rollback()
 
 
 @pytest.fixture()
 def client(session):
-    def override_get_db():
-        try:
-            yield session
-        finally:
-            session.close()
-
     def override_current_user():
         default_user = session.query(User).filter(User.username == TEST_USER["username"]).one_or_none()
         yield default_user
 
-    app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_current_user] = override_current_user
 
     yield TestClient(app)
-
-
-# create the test database
-db_directory = TemporaryDirectory()
-engine = create_engine(f"sqlite:///{Path(db_directory.name, 'test.db')}", connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

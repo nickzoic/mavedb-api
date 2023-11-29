@@ -19,7 +19,7 @@ def setup_router_db(session):
     db.add(User(**EXTRA_USER))
     db.add(ReferenceGenome(**TEST_REFERENCE_GENOME))
     db.add(License(**TEST_LICENSE))
-    db.commit()
+    # db.commit()
 
 
 @pytest.fixture

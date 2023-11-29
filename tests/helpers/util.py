@@ -16,7 +16,7 @@ def change_ownership(db, urn, model):
     item.created_by_id = extra_user.id
     item.modified_by_id = extra_user.id
     db.add(item)
-    db.commit()
+    #db.commit()
 
 
 def create_experiment(client, update=None):
